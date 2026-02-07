@@ -1,0 +1,9 @@
+quart==0.19.6
+quart-auth==0.10.0
+motor==3.6.0
+telethon==1.37.0
+pymongo==4.10.1
+python-dotenv==1.0.1
+aiohttp==3.10.10
+beautifulsoup4==4.12.3
+tldextract==5.1.2
