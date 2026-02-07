@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-950 text-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alex Dashboard {% block title %}{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-950 via-indigo-950 to-purple-950">
+    <nav class="bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="{{ url_for('dashboard') }}" class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                Alex Dashboard
+            </a>
+            {% if current_user.auth_id %}
+            <a href="{{ url_for('logout') }}" class="text-red-400 hover:text-red-300">Logout</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for cat, msg in messages %}
+                    <div class="mb-6 p-4 rounded-lg {% if cat=='error' %}bg-red-900/50 border-red-700{% elif cat=='warning' %}bg-yellow-900/50 border-yellow-700{% else %}bg-blue-900/50 border-blue-700{% endif %} border">
+                        {{ msg }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
