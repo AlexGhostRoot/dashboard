@@ -5,5 +5,5 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-super-insecure-key-please-change")
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://127.0.0.1:27017/alex_dashboard")
+    MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://chathan:YzZ1JmcaxpUhVjlz@cluster0.ifjuhfc.mongodb.net/?appName=Cluster0")
     SESSION_COLLECTION = "sessions"
