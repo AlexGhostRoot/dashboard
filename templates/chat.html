@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}{{ chat_name }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-8rem)]">
+  <h1 class="text-2xl font-bold mb-4 text-purple-300">{{ chat_name }}</h1>
+
+  <div id="messages" class="flex-1 overflow-y-auto space-y-4 pr-2">
+    {% for m in messages %}
+    <div class="{% if m.out %}ml-auto max-w-[80%]{% else %}mr-auto max-w-[80%]{% endif %}">
+      <div class="p-4 rounded-2xl {% if m.out %}bg-purple-800/50{% else %}bg-gray-800/70{% endif %}">
+        <p class="whitespace-pre-wrap">{{ m.text }}</p>
+
+        {% if m.dangers %}
+        <div class="mt-3 text-red-400 text-sm flex items-center gap-2">
+          <span class="text-lg">⚠</span>
+          <div>
+            Suspicious link{% if m.dangers|length > 1 %}s{% endif %}:
+            <ul class="list-disc pl-5 mt-1">
+              {% for d in m.dangers %}
+              <li>{{ d.url }} — {{ d.reason }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="text-xs text-gray-500 mt-2 text-right">{{ m.date }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="mt-4 flex gap-3">
+    <input id="message-input" type="text" placeholder="Type a message..." autocomplete="off"
+           class="flex-1 px-5 py-3 bg-gray-800 border border-gray-700 rounded-full focus:outline-none focus:border-purple-500">
+    <button onclick="sendMessage()" class="px-6 py-3 bg-purple-600 rounded-full font-medium hover:bg-purple-500 transition">
+      Send
+    </button>
+  </div>
+</div>
+
+<script>
+  const chatId = {{ chat_id }};
+  const input = document.getElementById("message-input");
+  const messagesDiv = document.getElementById("messages");
+
+  // Real-time messages
+  const evtSource = new EventSource("/events");
+  evtSource.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.chat_id === chatId) {
+      const div = document.createElement("div");
+      div.className = data.out ? "ml-auto max-w-[80%]" : "mr-auto max-w-[80%]";
+      let html = `<div class="p-4 rounded-2xl ${data.out ? 'bg-purple-800/50' : 'bg-gray-800/70'}">
+        <p class="whitespace-pre-wrap">${data.text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`;
+
+      if (data.dangers && data.dangers.length > 0) {
+        html += `<div class="mt-3 text-red-400 text-sm flex items-center gap-2">
+          <span class="text-lg">⚠</span>
+          <div>Suspicious link${data.dangers.length > 1 ? 's' : ''}:<ul class="list-disc pl-5 mt-1">`;
+        data.dangers.forEach(d => {
+          html += `<li>${d.url} — ${d.reason}</li>`;
+        });
+        html += `</ul></div></div>`;
+      }
+
+      html += `<div class="text-xs text-gray-500 mt-2 text-right">${data.date}</div></div>`;
+      div.innerHTML = html;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  };
+
+  // Send message
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    const res = await fetch("/send", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({chat_id: chatId, text})
+    });
+
+    if (res.ok) {
+      input.value = "";
+      // optimistic UI update can be added here if wanted
+    } else {
+      alert("Failed to send");
+    }
+  }
+
+  input.addEventListener("keypress", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // scroll to bottom on load
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+</script>
+{% endblock %}
